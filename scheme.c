@@ -103,6 +103,8 @@ static const char *strlwr(char *s) {
 # define InitFile "init.scm"
 #endif
 
+#include "init_scm.h"
+
 #ifndef FIRST_CELLSEGS
 # define FIRST_CELLSEGS 3
 #endif
@@ -4884,6 +4886,11 @@ int main(int argc, char **argv) {
   scheme_define(&sc,sc.global_env,mk_symbol(&sc,"load-extension"),mk_foreign_func(&sc, scm_load_ext));
 #endif
   argv++;
+
+  scheme_load_string(&sc,init_scm);
+
+
+#if 0
   if(access(file_name,0)!=0) {
     char *p=getenv("TINYSCHEMEINIT");
     if(p!=0) {
@@ -4931,6 +4938,8 @@ int main(int argc, char **argv) {
     }
     file_name=*argv++;
   } while(file_name!=0);
+#endif
+
   if(argc==1) {
     scheme_load_named_file(&sc,stdin,0);
   }

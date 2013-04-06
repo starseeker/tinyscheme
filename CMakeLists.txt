@@ -155,18 +155,38 @@ include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}
   )
 
+
+# Rather than load the init.scm file at run time,
+# with the uncertainties as to where exactly the file
+# resides, use xxd to generate an embeddable version.
+find_program(XXD_PROG xxd)
+if(NOT XXD_PROG)
+  add_executable(xxd xxd.c)
+  set(XXD_PROG xxd)
+endif(NOT XXD_PROG)
+add_custom_command(
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/init_scm.h
+  COMMAND ${XXD_PROG} -i init.scm > ${CMAKE_CURRENT_BINARY_DIR}/init_scm.h
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  DEPENDS ${XXD_PROG} ${CMAKE_CURRENT_SOURCE_DIR}/init.scm
+  )
+add_custom_target(init_hdr ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/init_scm.h)
+
+
 if(BUILD_SHARED_LIBS)
   set(tinyscheme_srcs scheme.c dynload.c)
   add_library(tinyscheme SHARED ${tinyscheme_srcs})
   if(SYS_LIBS)
     target_link_libraries(tinyscheme ${SYS_LIBS})
   endif(SYS_LIBS)
+  add_dependencies(tinyscheme init_hdr)
 endif(BUILD_SHARED_LIBS)
 if(BUILD_STATIC_LIBS)
   add_library(tinyscheme_static STATIC scheme.c)
   if(NOT MSVC)
     set_target_properties(tinyscheme-static PROPERTIES OUTPUT_NAME "tinyscheme")
   endif(NOT MSVC)
+  add_dependencies(tinyscheme-static init_hdr)
 endif(BUILD_STATIC_LIBS)
 
 if(ENABLE_TINYSCHEME_REPL)
@@ -174,6 +194,7 @@ if(ENABLE_TINYSCHEME_REPL)
   if(SYS_LIBS)
     target_link_libraries(scheme ${SYS_LIBS})
   endif(SYS_LIBS)
+  add_dependencies(scheme init_hdr)
 endif(ENABLE_TINYSCHEME_REPL)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/init.scm ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/init.scm COPYONLY)

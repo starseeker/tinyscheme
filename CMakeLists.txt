@@ -132,8 +132,6 @@ if(ENABLE_TINYSCHEME_REPL)
   add_dependencies(scheme init_hdr)
 endif(ENABLE_TINYSCHEME_REPL)
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/init.scm ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/init.scm COPYONLY)
-
 mark_as_advanced(EXECUTABLE_OUTPUT_PATH)
 mark_as_advanced(LIBRARY_OUTPUT_PATH)
 

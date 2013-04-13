@@ -103,7 +103,13 @@ static const char *strlwr(char *s) {
 # define InitFile "init.scm"
 #endif
 
+/* Include and use the hexcode char
+ * array version of the init.scm file
+ * to ensure we don't have to try and
+ * locate it at run time */
+unsigned char init_scm[] = {
 #include "init_scm.h"
+};
 
 #ifndef FIRST_CELLSEGS
 # define FIRST_CELLSEGS 3

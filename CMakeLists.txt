@@ -90,20 +90,18 @@ include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}
   )
 
-
 # Rather than load the init.scm file at run time,
 # with the uncertainties as to where exactly the file
-# resides, use xxd to generate an embeddable version.
-find_program(XXD_PROG xxd)
-if(NOT XXD_PROG)
-  add_executable(xxd xxd.c)
-  set(XXD_PROG xxd)
-endif(NOT XXD_PROG)
+# resides, use William Ahern's hexdump to generate 
+# an embeddable version. Build our own copy of hexdump
+# to ensure consistent behavior and portability.
+# See http://25thandclement.com/~william/projects/hexdump.c.html
+add_executable(initfiletohex hexdump.c)
+set_property(TARGET initfiletohex APPEND PROPERTY COMPILE_DEFINITIONS "HEXDUMP_MAIN")
 add_custom_command(
   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/init_scm.h
-  COMMAND ${XXD_PROG} -i init.scm > ${CMAKE_CURRENT_BINARY_DIR}/init_scm.h
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  DEPENDS ${XXD_PROG} ${CMAKE_CURRENT_SOURCE_DIR}/init.scm
+  COMMAND initfiletohex -i ${CMAKE_CURRENT_SOURCE_DIR}/init.scm > ${CMAKE_CURRENT_BINARY_DIR}/init_scm.h
+  DEPENDS initfiletohex ${CMAKE_CURRENT_SOURCE_DIR}/init.scm
   )
 add_custom_target(init_hdr ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/init_scm.h)
 

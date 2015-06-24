@@ -18,7 +18,7 @@ enum scheme_port_kind {
   port_srfi6=4,
   port_input=16,
   port_output=32,
-  port_saw_EOF=64,
+  port_saw_EOF=64
 };
 
 typedef struct port {
@@ -141,8 +141,8 @@ void *ext_data;     /* For the benefit of foreign functions */
 long gensym_cnt;
 
 struct scheme_interface *vptr;
-void *dump_base;	 /* pointer to base of allocated dump stack */
-int dump_size;		 /* number of frames allocated for dump stack */
+void *dump_base;    /* pointer to base of allocated dump stack */
+int dump_size;      /* number of frames allocated for dump stack */
 };
 
 /* operator code */

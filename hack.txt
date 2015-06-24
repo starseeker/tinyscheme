@@ -20,29 +20,32 @@
      
      In the sequel, lines that begin with '>' denote lines to add to the
      code. Lines that begin with '|' are just citations of existing code.
+     Lines that begin with X denote lines to be removed from the code.
 
      First of all, we need to assign a typeid to our new type. Typeids
-     in TinyScheme are small integers declared in an enum, very close to
-     the top; it begins with T_STRING. Add a new one at the end, say
-     T_MEMBLOCK. There can be at most 31 types, but you don't have to
-     worry about that limit yet.
+     in TinyScheme are small integers declared in the scheme_types enum
+     located near the top of the scheme.c file; it begins with T_STRING.
+     Add a new entry at the end, say T_MEMBLOCK. Remember to adjust the
+     value of T_LAST_SYTEM_TYPE when adding new entries. There can be at
+     most 31 types, but you don't have to worry about that limit yet.
 
-|    ...
-|      T_PORT,
-|      T_VECTOR,          /* remember to add a comma to the preceding item! */
-|      T_MEMBLOCK
-}     };
+|       T_ENVIRONMENT=14,
+X       T_LAST_SYSTEM_TYPE=14
+>       T_MEMBLOCK=15,
+>       T_LAST_SYSTEM_TYPE=15
+|     };
 
-     Then, some helper macros would be useful. Go to where isstring() and
-     the rest are defined and define:
 
->    int ismemblock(pointer p)      { return (type(p)==T_MEMBLOCK); }
+     Then, some helper macros would be useful. Go to where is_string()
+     and the rest are defined and add:
+
+>     INTERFACE INLINE int is_memblock(pointer p)     { return (type(p)==T_MEMBLOCK); }
 
      This actually is a function, because it is meant to be exported by
      scheme.h. If no foreign function will ever manipulate a memory block,
-     you can instead define it as a macro
+     you can instead define it as a macro:
 
->     #define ismemblock(p) (type(p)==T_MEMBLOCK)
+>     #define is_memblock(p) (type(p)==T_MEMBLOCK)
 
      Then we make space for the new type in the main data structure:
      struct cell. As it happens, the _string part of the union _object
@@ -57,7 +60,7 @@
      length. If we couln't reuse existing fields, we could always add other
      alternatives in union _object.
 
-     We then procede to write the function that actually makes a new block.
+     We then proceed to write the function that actually makes a new block.
      For conformance reasons, we name it mk_memblock
 
 >     static pointer mk_memblock(scheme *sc, int len, char fill) {
@@ -81,65 +84,69 @@
      that staff, function finalize_cell(), currently handling strings only.
 
 |     static void finalize_cell(scheme *sc, pointer a) {
-|          if(isstring(a)) {
-|               sc->free(strvalue(a));
-|          }
->          else if(ismemblock(a)) {
->               sc->free(strvalue(x));
->          }
-|     }
+|       if(is_string(a)) {
+|          sc->free(strvalue(a));
+>       } else if(is_memblock(a)) {
+>          sc->free(strvalue(a));
+|       } else if(is_port(a)) {
 
-     There are no MEMBLOCK literals, so we don't concern ourselfs with
+     There are no MEMBLOCK literals, so we don't concern ourselves with
      the READER part (yet!). We must cater to the PRINTER, though. We
-     add one case more in printatom().
+     add one case more in atom2str().
 
 |     } else if (iscontinuation(l)) {
 |          p = "#<CONTINUATION>";
->     } else if (ismemblock(l)) {
+>     } else if (is_memblock(l)) {
 >          p = "#<MEMORY BLOCK>";
-|     }
+|     } else {
 
      Whenever a MEMBLOCK is displayed, it will look like that.
      Now, we must add the interface functions: constructor, predicate,
      accessor, modifier. We must in fact create new op-codes for the virtual
-     machine underlying TinyScheme. There is a huge enum with OP_XXX values.
-     That's where the op-codes are declared. For reasons of cohesion, we add
-     the new op-codes right after those for vectors:
+     machine underlying TinyScheme. Since version 1.30, TinyScheme uses
+     macros and a single source text to keep the enums and the dispatch table
+     in sync. The op-codes are defined in the opdefines.h file with one line
+     for each op-code. The lines in the file have six columns between the
+     starting _OPDEF( and ending ): A, B, C, D, E, and OP.
+     Note that this file uses unusually long lines to accomodate all the
+     information; adjust your editor to handle this.
 
-|   OP_VECSET,
->   OP_MKBLOCK,
->   OP_MEMBLOCKP,
->   OP_BLOCKLEN,
->   OP_BLOCKREF,
->   OP_BLOCKSET,
-|   OP_NOT,
-
-     We add the predicate along the other predicates:
-
-|   OP_VECTORP,
->   OP_BLOCKP,
-|   OP_EQ,
+     The purpose of the columns is:
+       - Column A is the name of the subroutine that handles the op-code.
+       - Column B is the name of the op-code function.
+       - Columns C and D are the minimum and maximum number of arguments
+         that are accepted by the op-code.
+       - Column E is a set of flags that tells the interpreter the type of
+         each of the arguments expected by the op-code.
+       - Column OP is used in the scheme_opcodes enum located in the
+         scheme-private.h file.
 
      Op-codes are really just tags for a huge C switch, only this switch
-     is broke up in a number of different opexe_X functions. The
+     is broken up in to a number of different opexe_X functions. The
      correspondence is made in table "dispatch_table". There, we assign
      the new op-codes to opexe_2, where the equivalent ones for vectors
      are situated. We also assign a name for them, and specify the minimum
-     and maximum arity. INF_ARG as a maximum arity means "unlimited".
+     and maximum arity (number of expected arguments). INF_ARG as a maximum
+     arity means "unlimited".
 
-|     {opexe_2, "vector-set!", 3, 3},    /* OP_VECSET */
->     {opexe_2, "make-block", 1, 2},     /* OP_MKBLOCK */
->     {opexe_2, "block-length", 1, 1},   /* OP_BLOCKLEN */
->     {opexe_2, "block-ref", 2, 2},      /* OP_BLOCKREF */
->     {opexe_2, "block-set!",3 ,3},      /* OP_BLOCKSET */
+     For reasons of consistency, we add the new op-codes right after those
+     for vectors:
 
-     The predicate goes with the other predicates, in opexe_3.
+|     _OP_DEF(opexe_2, "vector-set!",                    3,  3,       TST_VECTOR TST_NATURAL TST_ANY,  OP_VECSET           )
+>     _OP_DEF(opexe_2, "make-block",                     1,  2,       TST_NATURAL TST_CHAR,            OP_MKBLOCK          )
+>     _OP_DEF(opexe_2, "block-length",                   1,  1,       T_MEMBLOCK,                      OP_BLOCKLEN         )
+>     _OP_DEF(opexe_2, "block-ref",                      2,  2,       T_MEMBLOCK TST_NATURAL,          OP_BLOCKREF         )
+>     _OP_DEF(opexe_2, "block-set!",                     1,  1,       T_MEMBLOCK TST_NATURAL TST_CHAR, OP_BLOCKSET         )
+|     _OP_DEF(opexe_3, "not",                            1,  1,       TST_NONE,                        OP_NOT              )
 
-|     {opexe_3, "vector?", 1, 1},  /* OP_VECTORP, */
->     {opexe_3, "block?", 1, 1},   /* OP_BLOCKP, */
+     We add the predicate along with the other predicates in opexe_3:
 
-     All that remains is to write the actual processing in opexe_2, right
-     after OP_VECSET.
+|     _OP_DEF(opexe_3, "vector?",                        1,  1,       TST_ANY,                         OP_VECTORP          )
+>     _OP_DEF(opexe_3, "block?",                         1,  1,       TST_ANY,                         OP_BLOCKP           )
+|     _OP_DEF(opexe_3, "eq?",                            2,  2,       TST_ANY,                         OP_EQ               )
+
+     All that remains is to write the actual code to do the processing and
+     add it to the switch statement in opexe_2, after the OP_VECSET case.
 
 >     case OP_MKBLOCK: { /* make-block */
 >          int fill=0;
@@ -228,9 +235,10 @@
 >          s_return(sc,car(sc->args));
 >     }
 
-     Same for the predicate in opexe_3.
+     Finally, do the same for the predicate in opexe_3.
 
 |     case OP_VECTORP:     /* vector? */
-|          s_retbool(isvector(car(sc->args)));
+|          s_retbool(is_vector(car(sc->args)));
 >     case OP_BLOCKP:     /* block? */
->          s_retbool(ismemblock(car(sc->args)));
+>          s_retbool(is_memblock(car(sc->args)));
+|     case OP_EQ:         /* eq? */

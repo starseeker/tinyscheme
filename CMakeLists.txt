@@ -17,7 +17,7 @@ endif(COMMAND CMAKE_POLICY)
 project(TINYSCHEME)
 
 # Version information
-set(TINYSCHEME_VERSION 1.40)
+set(TINYSCHEME_VERSION 1.41)
 
 #---------------------------------------------------------------------
 # Features

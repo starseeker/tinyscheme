@@ -101,7 +101,7 @@ include_directories(
 
 # Rather than load the init.scm file at run time,
 # with the uncertainties as to where exactly the file
-# resides, use William Ahern's hexdump to generate 
+# resides, use William Ahern's hexdump to generate
 # an embeddable version. Build our own copy of hexdump
 # to ensure consistent behavior and portability.
 # See http://25thandclement.com/~william/projects/hexdump.c.html
@@ -124,7 +124,7 @@ if(BUILD_SHARED_LIBS)
   add_dependencies(tinyscheme init_hdr)
 endif(BUILD_SHARED_LIBS)
 if(BUILD_STATIC_LIBS)
-  add_library(tinyscheme_static STATIC scheme.c)
+  add_library(tinyscheme-static STATIC scheme.c)
   if(NOT MSVC)
     set_target_properties(tinyscheme-static PROPERTIES OUTPUT_NAME "tinyscheme")
   endif(NOT MSVC)

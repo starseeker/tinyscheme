@@ -17,7 +17,7 @@ endif(COMMAND CMAKE_POLICY)
 project(TINYSCHEME)
 
 # Version information
-set(TINYSCHEME_VERSION 1.40)
+set(TINYSCHEME_VERSION 1.41)
 
 #---------------------------------------------------------------------
 # Features
@@ -43,7 +43,16 @@ if(BUILD_SHARED_LIBS)
   add_definitions(-DUSE_DL=1)
 endif(BUILD_SHARED_LIBS)
 
-TS_OPT(STANDALONE OFF "Define this to produce a standalone interpreter.")
+if(NOT DEFINED ENABLE_STANDALONE)
+  set(ENABLE_STANDALONE OFF)
+endif(NOT DEFINED ENABLE_STANDALONE)
+if(ENABLE_STANDALONE)
+  add_definitions(-DSTANDALONE=1)
+else(ENABLE_STANDALONE)
+  add_definitions(-DSTANDALONE=0)
+endif(ENABLE_STANDALONE)
+set(ENABLE_STANDALONE ${ENABLE_STANDALONE} CACHE BOOL "Define this to produce a standalone interpreter.")
+
 TS_OPT(MATH ON "Includes math routines.")
 TS_OPT(CHAR_CLASSIFIERS ON "Includes character classifier procedures.")
 TS_OPT(ASCII_NAMES ON "Enable extended character notation based on ASCII names.")
@@ -92,7 +101,7 @@ include_directories(
 
 # Rather than load the init.scm file at run time,
 # with the uncertainties as to where exactly the file
-# resides, use William Ahern's hexdump to generate 
+# resides, use William Ahern's hexdump to generate
 # an embeddable version. Build our own copy of hexdump
 # to ensure consistent behavior and portability.
 # See http://25thandclement.com/~william/projects/hexdump.c.html
@@ -115,7 +124,7 @@ if(BUILD_SHARED_LIBS)
   add_dependencies(tinyscheme init_hdr)
 endif(BUILD_SHARED_LIBS)
 if(BUILD_STATIC_LIBS)
-  add_library(tinyscheme_static STATIC scheme.c)
+  add_library(tinyscheme-static STATIC scheme.c)
   if(NOT MSVC)
     set_target_properties(tinyscheme-static PROPERTIES OUTPUT_NAME "tinyscheme")
   endif(NOT MSVC)

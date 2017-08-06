@@ -2,16 +2,7 @@
 # TinyScheme software package.
 
 # Minimum required version of CMake
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.3)
-if(COMMAND CMAKE_POLICY)
-  CMAKE_POLICY(SET CMP0003 NEW)
-  CMAKE_POLICY(SET CMP0007 OLD)
-  if(${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CMAKE_PATCH_VERSION}
-      VERSION_GREATER 2.8.3)
-    CMAKE_POLICY(SET CMP0017 OLD)
-  endif(${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CMAKE_PATCH_VERSION}
-    VERSION_GREATER 2.8.3)
-endif(COMMAND CMAKE_POLICY)
+cmake_minimum_required(VERSION 2.8.3)
 
 # Project name
 project(TINYSCHEME)
@@ -49,10 +40,10 @@ TS_OPT(ASCII_NAMES ON "Enable extended character notation based on ASCII names."
 TS_OPT(STRING_PORTS ON "Enables string ports.")
 TS_OPT(ERROR_HOOK OFF "Force system errors through user-defined error handling.")
 TS_OPT(TRACING OFF "Enable the use of TRACING.")
-TS_OPT(COLON_HOOK OFF "Enable use of qualified identifiers.")
-TS_OPT(PLIST OFF "Enables property lists.")
+TS_OPT(COLON_HOOK OFF "Enable use of qualified identifiers.  (see \"Colon Qualifiers - Packages\") It should only be used if you *absolutely* need to use '::' in identifiers.")
+TS_OPT(PLIST OFF "Enables property lists (not Standard Scheme stuff).")
 TS_OPT(STRCASECMP OFF "Defines stricmp as strcasecmp, for Unix.")
-TS_OPT(SCHEME_STACK OFF "Enables 'cons' stack.")
+TS_OPT(SCHEME_STACK ON "Enables 'cons' stack. (the alternative is a faster calling scheme, which breaks continuations). Undefine it if you don't care about strict compatibility but you do care about faster execution.")
 
 if(NOT DEFINED ENABLE_TINYSCHEME_REPL)
   set(ENABLE_TINYSCHEME_REPL ON CACHE BOOL "Build scheme REPL application." )

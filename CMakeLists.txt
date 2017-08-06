@@ -43,7 +43,7 @@ TS_OPT(TRACING OFF "Enable the use of TRACING.")
 TS_OPT(COLON_HOOK OFF "Enable use of qualified identifiers.  (see \"Colon Qualifiers - Packages\") It should only be used if you *absolutely* need to use '::' in identifiers.")
 TS_OPT(PLIST OFF "Enables property lists (not Standard Scheme stuff).")
 TS_OPT(STRCASECMP OFF "Defines stricmp as strcasecmp, for Unix.")
-TS_OPT(SCHEME_STACK ON "Enables 'cons' stack. (the alternative is a faster calling scheme, which breaks continuations). Undefine it if you don't care about strict compatibility but you do care about faster execution.")
+#TS_OPT(SCHEME_STACK OFF "Enables 'cons' stack. (the alternative is a faster calling scheme, which breaks continuations). Undefine it if you don't care about strict compatibility but you do care about faster execution.")
 
 if(NOT DEFINED ENABLE_TINYSCHEME_REPL)
   set(ENABLE_TINYSCHEME_REPL ON CACHE BOOL "Build scheme REPL application." )

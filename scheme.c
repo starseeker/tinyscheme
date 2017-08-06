@@ -100,10 +100,6 @@ static const char *strlwr(char *s) {
 # define prompt "ts> "
 #endif
 
-#ifndef InitFile
-# define InitFile "init.scm"
-#endif
-
 /* Include and use the hexcode char
  * array version of the init.scm file
  * to ensure we don't have to try and
@@ -4967,7 +4963,6 @@ int main(int argc, char **argv) {
 #endif
   scheme sc;
   FILE *fin;
-  char *file_name=InitFile;
   int retcode;
   int isfile=1;
 
@@ -4995,58 +4990,9 @@ int main(int argc, char **argv) {
 #endif
   argv++;
 
+  /* Read the "backed in" initialization instead of trying to find and load the
+   * init.scm file */
   scheme_load_string(&sc,init_scm);
-
-
-#if 0
-  if(access(file_name,0)!=0) {
-    char *p=getenv("TINYSCHEMEINIT");
-    if(p!=0) {
-      file_name=p;
-    }
-  }
-  do {
-    if(strcmp(file_name,"-")==0) {
-      fin=stdin;
-    } else if(strcmp(file_name,"-1")==0 || strcmp(file_name,"-c")==0) {
-      pointer args=sc.NIL;
-      isfile=file_name[1]=='1';
-      file_name=*argv++;
-      if(strcmp(file_name,"-")==0) {
-    fin=stdin;
-      } else if(isfile) {
-    fin=fopen(file_name,"r");
-      }
-      for(;*argv;argv++) {
-    pointer value=mk_string(&sc,*argv);
-    args=cons(&sc,value,args);
-      }
-      args=reverse_in_place(&sc,sc.NIL,args);
-      scheme_define(&sc,sc.global_env,mk_symbol(&sc,"*args*"),args);
-
-    } else {
-      fin=fopen(file_name,"r");
-    }
-    if(isfile && fin==0) {
-      fprintf(stderr,"Could not open file %s\n",file_name);
-    } else {
-      if(isfile) {
-        scheme_load_named_file(&sc,fin,file_name);
-      } else {
-        scheme_load_string(&sc,file_name);
-      }
-      if(!isfile || fin!=stdin) {
-    if(sc.retcode!=0) {
-      fprintf(stderr,"Errors encountered reading %s\n",file_name);
-    }
-    if(isfile) {
-      fclose(fin);
-    }
-      }
-    }
-    file_name=*argv++;
-  } while(file_name!=0);
-#endif
 
   if(argc==1) {
     scheme_load_named_file(&sc,stdin,0);
